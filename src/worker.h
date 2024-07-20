@@ -29,6 +29,7 @@ class worker {
     std::vector<std::string> &whitelist;
     std::unordered_map<std::string, del_message> del_reasons;
     tracker_status status;
+    int site_freeleech;
     bool reaper_active;
     time_t cur_time;
     std::shared_ptr<spdlog::logger> logger;
@@ -54,7 +55,7 @@ class worker {
     inline bool peer_is_visible(user_ptr &u, peer *p);
 
  public:
-    worker(config * conf_obj, torrent_list &torrents, user_list &users, std::vector<std::string> &_whitelist, mysql * db_obj, site_comm * sc);
+    worker(config * conf_obj, int freeleech, torrent_list &torrents, user_list &users, std::vector<std::string> &_whitelist, mysql * db_obj, site_comm * sc);
     void reload_config(config * conf);
     std::string work(const std::string &input, std::string &ip, client_opts_t &client_opts);
     std::string announce(const std::string &input, torrent &tor, user_ptr &u, params_type &params, params_type &headers, std::string &ip, client_opts_t &client_opts);

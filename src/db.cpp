@@ -86,6 +86,23 @@ void mysql::clear_peer_data() {
     }
 }
 
+void mysql::load_freeleech(int freeleech) {
+	mysqlpp::Query query = conn.query("SELECT freeleech FROM site_freeleech");
+	try {
+		mysqlpp::StoreQueryResult res = query.store();
+		std::lock_guard<std::mutex> fl_lock(freeleech_mutex);
+		freeleech = res[0][0];
+	} catch (const mysqlpp::BadQuery &er) {
+		logger->error("Query error in load_freeleech: " + std::string(er.what()));
+		return;
+	}
+	if (freeleech == 1) {
+		logger->info("Site freeleech enabled");
+	} else {
+		logger->info("Site freeleech disabled");
+	}
+}
+
 void mysql::load_torrents(torrent_list &torrents) {
     mysqlpp::Query query = conn.query("SELECT t.ID, t.info_hash, t.freetorrent, tls.Snatched FROM torrents t INNER JOIN torrents_leech_stats tls ON (tls.TorrentID = t.ID) ORDER BY t.ID");
     try {

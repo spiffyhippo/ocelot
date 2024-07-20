@@ -27,8 +27,8 @@
 std::mutex worker::client_len_mutex;
 
 //---------- Worker - does stuff with input
-worker::worker(config * conf_obj, torrent_list &torrents, user_list &users, std::vector<std::string> &_whitelist, mysql * db_obj, site_comm * sc) :
-    conf(conf_obj), db(db_obj), s_comm(sc), torrents_list(torrents), users_list(users), whitelist(_whitelist), status(OPEN), reaper_active(false), randgen((std::random_device())()) {
+worker::worker(config * conf_obj, int freeleech, torrent_list &torrents, user_list &users, std::vector<std::string> &_whitelist, mysql * db_obj, site_comm * sc) :
+    conf(conf_obj), db(db_obj), s_comm(sc), site_freeleech(freeleech), torrents_list(torrents), users_list(users), whitelist(_whitelist), status(OPEN), reaper_active(false), randgen((std::random_device())()) {
     logger = spdlog::get("logger");
     load_config(conf);
 }
@@ -50,6 +50,7 @@ void worker::reload_config(config * conf) {
 
 void worker::reload_lists() {
     status = PAUSED;
+    db->load_freeleech(site_freeleech);
     db->load_torrents(torrents_list);
     db->load_users(users_list);
     db->load_whitelist(whitelist);
@@ -502,7 +503,7 @@ std::string worker::announce(const std::string &input, torrent &tor, user_ptr &u
             if (tor.free_torrent == NEUTRAL) {
                 downloaded_change = 0;
                 uploaded_change = 0;
-            } else if (tor.free_torrent == FREE || sit != tor.tokened_users.end()) {
+            } else if (tor.free_torrent == FREE || sit != tor.tokened_users.end() || site_freeleech == 1) {
                 if (sit != tor.tokened_users.end()) {
                     expire_token = true;
                     std::stringstream record;
