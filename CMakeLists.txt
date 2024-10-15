@@ -8,9 +8,8 @@ if (CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR)
    message(FATAL_ERROR "Source and build directories cannot be the same.")
 endif()
 
-
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/CMake")
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)  # Updated to C++17 for Boost.Beast and std::string_view
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Wfatal-errors")
 
@@ -33,9 +32,9 @@ else()
     endif()
 endif()
 
-#AM_LDFLAGS = -Wl,-O1 -Wl,--as-needed
-
-find_package(Boost COMPONENTS system iostreams REQUIRED)
+# Boost Libraries
+find_package(Boost COMPONENTS system iostreams REQUIRED)  # Added beast as part of boost
+find_package(Boost COMPONENTS beast REQUIRED)             # Boost.Beast for HTTP parsing
 message(STATUS "Boost_INCLUDE_DIRS='${Boost_INCLUDE_DIRS}'")
 message(STATUS "Boost_LIBRARIES='${Boost_LIBRARIES}'")
 include_directories(${Boost_INCLUDE_DIRS})
@@ -43,9 +42,11 @@ include_directories(${Boost_INCLUDE_DIRS})
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
+# MySQL
 find_package(MYSQL REQUIRED)
 find_package(MYSQLPP REQUIRED)
 
+# LibEv
 find_package(LibEv REQUIRED)
 include_directories(${LIBEV_INCLUDE_DIR})
 
@@ -54,11 +55,14 @@ include_directories(${CMAKE_SOURCE_DIR}/libs)
 file(GLOB HEADERS src/*.h)
 file(GLOB SOURCES src/*.cpp)
 
+# Add executable target for ocelot
 add_executable(ocelot ${HEADERS} ${SOURCES})
 
+# Link Libraries
 SET(LINK_LIBRARIES
     ${Boost_SYSTEM_LIBRARY}
     ${Boost_IOSTREAMS_LIBRARY}
+    ${Boost_BEAST_LIBRARY}     # Added Boost.Beast library to link
     ${LIBEV_LIBRARY}
     ${MYSQLPP_LIBRARY}
     Threads::Threads
@@ -72,7 +76,9 @@ elseif (USE_TCMALLOC)
     list(APPEND LINK_LIBRARIES ${TCMALLOC_LIBRARY})
 endif()
 
+# Link target executable with necessary libraries
 target_link_libraries(
     ocelot
     ${LINK_LIBRARIES}
 )
+
