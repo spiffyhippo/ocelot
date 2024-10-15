@@ -9,6 +9,7 @@ RUN apt-get update \
         default-libmysqlclient-dev \
         libboost-iostreams-dev \
         libboost-system-dev \
+        libboost-beast-dev \  # Added Boost.Beast for HTTP parsing
         libev-dev \
         libjemalloc-dev \
         libmysql++-dev \
@@ -19,7 +20,8 @@ RUN apt-get update \
 COPY . /srv
 WORKDIR /srv
 
-RUN cmake -Wno-dev -S /srv -B /srv/build \
+# Set C++17 standard for Boost.Beast
+RUN cmake -Wno-dev -S /srv -B /srv/build -DCMAKE_CXX_STANDARD=17 \
     && make -C build \
     && apt-get purge -y \
         build-essential \
@@ -31,7 +33,7 @@ RUN cmake -Wno-dev -S /srv -B /srv/build \
     && mv /srv/build/ocelot /srv/ocelot \
     && mv /srv/ocelot.conf.dist /srv/ocelot.conf
 
-# default listen_port value in ocelot.conf
+# Default listen_port value in ocelot.conf
 EXPOSE 34000
 
 CMD ["/srv/ocelot"]
